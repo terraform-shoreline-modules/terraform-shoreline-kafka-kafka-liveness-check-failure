@@ -1,7 +1,7 @@
 resource "shoreline_notebook" "kafka_liveness_check_failure" {
   name       = "kafka_liveness_check_failure"
   data       = file("${path.module}/data/kafka_liveness_check_failure.json")
-  depends_on = [shoreline_action.invoke_kafka_broker_check,shoreline_action.invoke_broker_status,shoreline_action.invoke_broker_check]
+  depends_on = [shoreline_action.invoke_kafka_broker_check,shoreline_action.invoke_cpu_memory_kafka_check,shoreline_action.invoke_check_broker]
 }
 
 resource "shoreline_file" "kafka_broker_check" {
@@ -14,22 +14,22 @@ resource "shoreline_file" "kafka_broker_check" {
   enabled          = true
 }
 
-resource "shoreline_file" "broker_status" {
-  name             = "broker_status"
-  input_file       = "${path.module}/data/broker_status.sh"
-  md5              = filemd5("${path.module}/data/broker_status.sh")
+resource "shoreline_file" "cpu_memory_kafka_check" {
+  name             = "cpu_memory_kafka_check"
+  input_file       = "${path.module}/data/cpu_memory_kafka_check.sh"
+  md5              = filemd5("${path.module}/data/cpu_memory_kafka_check.sh")
   description      = "The broker host is experiencing high CPU or memory utilization that is causing it to be unresponsive."
-  destination_path = "/agent/scripts/broker_status.sh"
+  destination_path = "/agent/scripts/cpu_memory_kafka_check.sh"
   resource_query   = "host"
   enabled          = true
 }
 
-resource "shoreline_file" "broker_check" {
-  name             = "broker_check"
-  input_file       = "${path.module}/data/broker_check.sh"
-  md5              = filemd5("${path.module}/data/broker_check.sh")
+resource "shoreline_file" "check_broker" {
+  name             = "check_broker"
+  input_file       = "${path.module}/data/check_broker.sh"
+  md5              = filemd5("${path.module}/data/check_broker.sh")
   description      = "Check if the broker is running on the host specified in the configuration file. If not, start the broker on the specified host."
-  destination_path = "/agent/scripts/broker_check.sh"
+  destination_path = "/agent/scripts/check_broker.sh"
   resource_query   = "host"
   enabled          = true
 }
@@ -44,23 +44,23 @@ resource "shoreline_action" "invoke_kafka_broker_check" {
   depends_on  = [shoreline_file.kafka_broker_check]
 }
 
-resource "shoreline_action" "invoke_broker_status" {
-  name        = "invoke_broker_status"
+resource "shoreline_action" "invoke_cpu_memory_kafka_check" {
+  name        = "invoke_cpu_memory_kafka_check"
   description = "The broker host is experiencing high CPU or memory utilization that is causing it to be unresponsive."
-  command     = "`chmod +x /agent/scripts/broker_status.sh && /agent/scripts/broker_status.sh`"
+  command     = "`chmod +x /agent/scripts/cpu_memory_kafka_check.sh && /agent/scripts/cpu_memory_kafka_check.sh`"
   params      = ["BROKER_HOST","BROKER_PORT"]
-  file_deps   = ["broker_status"]
+  file_deps   = ["cpu_memory_kafka_check"]
   enabled     = true
-  depends_on  = [shoreline_file.broker_status]
+  depends_on  = [shoreline_file.cpu_memory_kafka_check]
 }
 
-resource "shoreline_action" "invoke_broker_check" {
-  name        = "invoke_broker_check"
+resource "shoreline_action" "invoke_check_broker" {
+  name        = "invoke_check_broker"
   description = "Check if the broker is running on the host specified in the configuration file. If not, start the broker on the specified host."
-  command     = "`chmod +x /agent/scripts/broker_check.sh && /agent/scripts/broker_check.sh`"
+  command     = "`chmod +x /agent/scripts/check_broker.sh && /agent/scripts/check_broker.sh`"
   params      = ["BROKER_HOST","BROKER_PORT"]
-  file_deps   = ["broker_check"]
+  file_deps   = ["check_broker"]
   enabled     = true
-  depends_on  = [shoreline_file.broker_check]
+  depends_on  = [shoreline_file.check_broker]
 }
 

@@ -3,6 +3,10 @@
   "description": "This incident type refers to a scenario where the liveness check for Kafka cannot reach/communicate with the host where the broker is running. This issue can arise due to various reasons such as network issues, broker failure, or configuration errors. This can result in the Kafka broker being unavailable or not responding to requests, leading to potential service disruptions or downtime.",
   "params": [
     {
+      "name": "ZK_HOST",
+      "value": ""
+    },
+    {
       "name": "BROKER_HOST",
       "value": ""
     },
@@ -16,10 +20,6 @@
     },
     {
       "name": "TOPIC_NAME",
-      "value": ""
-    },
-    {
-      "name": "ZK_HOST",
       "value": ""
     },
     {
@@ -148,7 +148,7 @@
       "name": "cell_19",
       "type": "OP_LANG",
       "enabled": true,
-      "content": "host | host_name=$HOST_NAME | invoke_broker_status($BROKER_HOST, $BROKER_PORT)"
+      "content": "host | host_name=$HOST_NAME | invoke_cpu_memory_kafka_check($BROKER_HOST, $BROKER_PORT)"
     },
     {
       "name": "cell_20",
@@ -160,7 +160,7 @@
       "name": "cell_21",
       "type": "OP_LANG",
       "enabled": true,
-      "content": "host | host_name=$HOST_NAME | invoke_broker_check($BROKER_HOST, $BROKER_PORT)"
+      "content": "host | host_name=$HOST_NAME | invoke_check_broker($BROKER_HOST, $BROKER_PORT)"
     }
   ]
 }
